@@ -2,6 +2,8 @@ import express from 'express';
 import axios from 'axios';
 import cryptoJs from 'crypto-js';
 import storage from 'node-persist';
+import 'dotenv/config';
+
 
 const app = express();
 const port = 3000;
@@ -241,7 +243,7 @@ app.get('/store-product-list', async (req, res) => {
                 })
                 )
             if(productList?.length > 0){
-                await storage.setItem("product_list", productList);
+                await storage.setItem("product_list", productList.flat());
             }
         } else if (categoryList?.id) {
             const endpoint = `${baseUrl}/rest/v3/catalog/categories/${categoryList.id}`;
