@@ -636,23 +636,34 @@ app.post('/create-order', async (req, res) => {
         let orderData = req?.body;
         try {
 
-            let amazonGiftCards = { ...orderData, products: orderData?.amz_products || [], payments: orderData?.amz_payments || [] }
+            let amazonGiftCards = { ...orderData, products: orderData?.amz_products || [], payments: orderData?.amz_payments || [] };
 
-            let normalGiftCards = { ...orderData, products: orderData?.products, payments: orderData?.payments }
+            delete amazonGiftCards.amz_products;
+            delete amazonGiftCards.amz_payments;
+
+            let normalGiftCards = { ...orderData, products: orderData?.products, payments: orderData?.payments };
+            delete normalGiftCards.amz_products;
+            delete normalGiftCards.amz_payments;
+
+            let response = {};
             console.log(normalGiftCards, "normalGiftcards object");
-            // Extract data from the request body
             const endpoint = `${baseUrl}/rest/v3/orders`;
-            const signature = generateSignature('post', endpoint, normalGiftCards);
-            const dateAtClient = new Date().toISOString();
-            // Make a POST request to the specified endpoint
-            const response = await axios.post(endpoint, normalGiftCards, {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'dateAtClient': dateAtClient,
-                    'signature': signature,
-                    'Authorization': `Bearer ${bearerToken}`
-                }
-            });
+
+            // Extract data from the request body
+            if (normalGiftCards?.products?.length > 0) {
+                const signature = generateSignature('post', endpoint, normalGiftCards);
+                const dateAtClient = new Date().toISOString();
+                // Make a POST request to the specified endpoint
+                response = await axios.post(endpoint, normalGiftCards, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'dateAtClient': dateAtClient,
+                        'signature': signature,
+                        'Authorization': `Bearer ${bearerToken}`
+                    }
+                });
+            }
+
 
             let amzResponse = {}
 
@@ -671,7 +682,7 @@ app.post('/create-order', async (req, res) => {
 
 
             // Send the response from the Woohoo API back to the client
-            res.json({ ...response?.data, amz_details: amzResponse });
+            res.json({ ...response?.data, amz_details: amzResponse?.data });
         } catch (error) {
 
 
